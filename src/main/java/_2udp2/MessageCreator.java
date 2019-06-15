@@ -1,4 +1,4 @@
-package udp2;
+package _2udp2;
 
 public class MessageCreator {
     private static final String SN_HEADER = "收到暗号,我是(SN)";

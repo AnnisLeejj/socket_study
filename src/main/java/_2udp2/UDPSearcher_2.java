@@ -1,11 +1,10 @@
-package udp2;
+package _2udp2;
 
 import java.io.IOException;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import java.util.function.Consumer;
 
 public class UDPSearcher_2 {
     public static final int LISTEN_PORT = 30000;

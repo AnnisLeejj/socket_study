@@ -1,10 +1,9 @@
-package udp;
+package _2udp;
 
 
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.SocketException;
 
 public class UDPProvider_1 {
     public static void main(String[] args) throws IOException {
