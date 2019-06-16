@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.*;
+import java.nio.ByteBuffer;
 
 public class Server {
     private static final int PORT = 20000;
@@ -80,17 +81,41 @@ public class Server {
                 OutputStream outputStream = socket.getOutputStream();
                 InputStream inputStream = socket.getInputStream();
 
-                byte[] buffer = new byte[128];
+                byte[] buffer = new byte[256];
                 int readCount = inputStream.read(buffer);
-                if (readCount > 0) {
-                    System.out.println("收到数量:" + readCount + " 数据:" + new String(buffer, 0, readCount));
-                    //回送数据
-                    outputStream.write(buffer, 0, readCount);
-                } else {
-                    System.out.println("没有收到:" + readCount);
-                    //回送数据
-                    outputStream.write(new byte[]{0});
-                }
+                ByteBuffer byteBuffer = ByteBuffer.wrap(buffer, 0, readCount);
+
+                //byte
+                byte by = byteBuffer.get();
+                //char
+                char c =  byteBuffer.getChar();
+                //int
+                int i = byteBuffer.getInt();
+                //bool
+                boolean b = byteBuffer.get() == 1;
+                //long
+                long l = byteBuffer.getLong();
+                //float
+                float f = byteBuffer.getFloat();
+                //double
+                double d = byteBuffer.getDouble();
+
+                //string
+                int pos = byteBuffer.position();
+                String str = new String(buffer, pos, readCount - pos - 1);
+
+                System.out.println("收到数据量:" + readCount + "   数据:\n" +
+                        by + "\n" +
+                        c + "\n" +
+                        i + "\n" +
+                        b + "\n" +
+                        l + "\n" +
+                        f + "\n" +
+                        d + "\n" +
+                        str + "\n"
+                );
+                outputStream.write(buffer, 0, readCount);
+
                 outputStream.close();
                 inputStream.close();
             } catch (Exception e) {

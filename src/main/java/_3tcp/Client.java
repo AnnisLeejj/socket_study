@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.*;
+import java.nio.ByteBuffer;
 
 public class Client {
     private static final int PORT = 20000;
@@ -82,7 +83,7 @@ public class Client {
 
         //设置性能参数: 短链接,延迟 带宽的相对重要性
         //这里设置的权重
-        socket.setPerformancePreferences(1,2,3);
+        socket.setPerformancePreferences(1, 2, 3);
     }
 
     static void todo(Socket client) throws IOException {
@@ -91,19 +92,35 @@ public class Client {
 
         //得到Socket输入流
         InputStream inputStream = client.getInputStream();
-        byte[] buffer = new byte[128];
-        //构建
+        byte[] buffer = new byte[256];
+
+        ByteBuffer byteBuffer = ByteBuffer.wrap(buffer);
+
+        //byte
+        byteBuffer.put((byte) 126);
+        //char
+        byteBuffer.putChar('a');
+        //int
+        byteBuffer.putInt(2323);
+        //bool
+        boolean b = true;
+        byteBuffer.put((byte) (b ? 1 : 0));
+        //long
+        byteBuffer.putLong(4523451231L);
+        //float
+        byteBuffer.putFloat(23.1235512f);
+        //double
+        byteBuffer.putDouble(23.1235512d);
+        //string
+        byteBuffer.put("Hello".getBytes());
+
 
         //发送到服务器
-        outputStream.write(new byte[]{'a', 'b', 'c'});
+        outputStream.write(buffer, 0, byteBuffer.position() + 1);
 
         //接受服务器返回
         int read = inputStream.read(buffer);
-        if (read > 0) {
-            System.out.println("收到数量:" + read + " 数据:" + new String(buffer, 0, read));
-        } else {
-            System.out.println("没有收到:" + read);
-        }
+        System.out.println("收到:" + read);
 
         //资源释放
         outputStream.close();
