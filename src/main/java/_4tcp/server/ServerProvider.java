@@ -6,10 +6,12 @@ import _4tcp.tools.ByteUtils;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.SocketException;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
+/**
+ * 设备信息提供  (用于接收广播)
+ */
 public class ServerProvider {
     private static Provider PROVIDER_INSTANCE;
 
