@@ -60,7 +60,7 @@ public class ServerProvider {
                     int clientDataLen = receivePack.getData().length;
                     byte[] clientData = receivePack.getData();
                     boolean isValid = clientDataLen >= (UDPConstants.HEADER.length + 2 + 4)
-                            && ByteUtils.startWith(clientData, UDPConstants.HEADER);
+                            && ByteUtils.startsWith(clientData, UDPConstants.HEADER);
 
                     System.out.println("ServerProvider receive form ip:" +
                             clienIP + ":" + clientPort + "\t dataValid:" + isValid);

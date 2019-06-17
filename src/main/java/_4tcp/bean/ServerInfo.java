@@ -5,6 +5,12 @@ public class ServerInfo {
     private int port;
     private String address;
 
+    public ServerInfo(String sn, String address, int port) {
+        this.sn = sn;
+        this.port = port;
+        this.address = address;
+    }
+
     public String getSn() {
         return sn;
     }
