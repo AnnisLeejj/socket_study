@@ -70,8 +70,8 @@ public class TCPServer {
                 }
                 //客户端构建异步线程
                 ClientHandler clientHandler = new ClientHandler(client);
-                //启动线程
-                clientHandler.start();
+                //读取信息并打印
+                clientHandler.readToPrint();
             } while (!done);
             System.out.println("服务器已关闭!");
         }
