@@ -48,7 +48,7 @@ public class TCPServer {
         });
     }
 
-    private static class ClientListener extends Thread {
+    private class ClientListener extends Thread {
         private ServerSocket server;
         private boolean done = false;
 
@@ -68,10 +68,18 @@ public class TCPServer {
                 } catch (IOException e) {
                     continue;
                 }
-                //客户端构建异步线程
-                ClientHandler clientHandler = new ClientHandler(client);
-                //读取信息并打印
-                clientHandler.readToPrint();
+                try {
+                    //客户端构建异步线程
+                    ClientHandler clientHandler = new ClientHandler(client, handler -> {
+                        clientHandlerList.remove(handler);
+                    });
+                    //读取信息并打印
+                    clientHandler.readToPrint();
+                    clientHandlerList.add(clientHandler);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    System.out.println("客户端连接异常:" + e.getMessage());
+                }
             } while (!done);
             System.out.println("服务器已关闭!");
         }

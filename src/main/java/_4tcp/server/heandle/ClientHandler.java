@@ -1,40 +1,56 @@
 package _4tcp.server.heandle;
 
 import _4tcp.tools.CloseUtils;
+import com.sun.istack.internal.NotNull;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * 客户端消息处理
  */
 public class ClientHandler {
-    private Socket socket;
-    private boolean flag = true;
+    private final Socket socket;
+    private final ClientReadHandler readHandler;
+    private final ClientWriteHandler writeHandler;
+    private final CloseNotify closeNotify;
 
-    public ClientHandler(Socket socket) {
+    public ClientHandler(@NotNull Socket socket, @NotNull CloseNotify closeNotify) throws IOException {
         this.socket = socket;
+        readHandler = new ClientReadHandler(socket.getInputStream());
+        writeHandler = new ClientWriteHandler(socket.getOutputStream());
+        this.closeNotify = closeNotify;
         System.out.println("新客户端连接:" + socket.getInetAddress() + ":" + socket.getPort());
 
     }
 
 
     public void send(String message) {
-
+        writeHandler.send(message);
 
     }
 
     public void readToPrint() {
-
+        readHandler.start();
     }
 
     public void exit() {
+        System.out.println("客户端已退出:" + socket.getInetAddress() + ":" + socket.getPort());
+        readHandler.exit();
+        writeHandler.exit();
+        CloseUtils.close(socket);
 
     }
 
     private void exitBySelf() {
         exit();
 
+    }
+
+    public interface CloseNotify {
+        void onSelfClose(ClientHandler handler);
     }
 
     class ClientReadHandler extends Thread {
@@ -50,7 +66,7 @@ public class ClientHandler {
             try {
                 //得到输入流,用于接收数据
                 BufferedReader socketInput = new BufferedReader(
-                        new InputStreamReader(socket.getInputStream()));
+                        new InputStreamReader(inputStream));
                 do {
                     Thread.sleep(500);
                     //客户端拿到一条数据
@@ -72,12 +88,56 @@ public class ClientHandler {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             } finally {
-                 //连接关闭
+                //连接关闭
                 CloseUtils.close(inputStream);
             }
-            //System.out.println("客户端已退出:" + socket.getInetAddress() + ":" + socket.getPort());
+
         }
 
+        void exit() {
+            done = true;
+            CloseUtils.close(inputStream);
+        }
+    }
+
+    class ClientWriteHandler {
+        private boolean done = false;
+        private final PrintStream printStream;
+        private final ExecutorService executorService;
+
+        ClientWriteHandler(OutputStream outputStream) {
+            this.printStream = new PrintStream(outputStream);
+            this.executorService = Executors.newSingleThreadExecutor();
+        }
+
+        void send(String message) {
+            executorService.execute(new WriteRunnable(message));
+        }
+
+        void exit() {
+            done = true;
+            CloseUtils.close(printStream);
+            executorService.shutdownNow();
+        }
+
+        class WriteRunnable implements Runnable {
+            private final String msg;
+
+            WriteRunnable(String msg) {
+                this.msg = msg;
+            }
+
+            @Override
+            public void run() {
+                if (ClientWriteHandler.this.done)
+                    return;
+                try {
+                    ClientWriteHandler.this.printStream.println(msg);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
 }
