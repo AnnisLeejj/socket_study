@@ -17,11 +17,6 @@ public class Server {
 
         ServerProvider.start(TCPConstants.PORT_SERVER);
 
-//        try {
-//            System.in.read();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
 
         String str = null;

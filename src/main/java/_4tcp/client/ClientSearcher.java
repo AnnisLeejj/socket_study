@@ -22,13 +22,14 @@ public class ClientSearcher {
         System.out.println("UDPSearchServer Started.");
 
         //成功收到回送的栅格
-        CountDownLatch recerveLatch = new CountDownLatch(1);
+        CountDownLatch receiverLatch = new CountDownLatch(1);
         Listener listener = null;
         try {
-            listener = listen(recerveLatch);
+            listener = listen(receiverLatch);
             sendBroadcast();
-            recerveLatch.await(timeout, TimeUnit.SECONDS);
+            receiverLatch.await(timeout, TimeUnit.SECONDS);
         } catch (Exception e) {
+            e.printStackTrace();
         }
         //完成
         System.out.println("UDPSearched Finished.");
@@ -42,11 +43,12 @@ public class ClientSearcher {
         return null;
     }
 
-    private static Listener listen(CountDownLatch recerveLatch) {
+    private static Listener listen(CountDownLatch recerveLatch) throws InterruptedException {
         System.out.println("UDPSearcher start listen.");
         CountDownLatch startDownLatch = new CountDownLatch(1);
         Listener listener = new Listener(LISTEN_PORT, startDownLatch, recerveLatch);
         listener.start();
+        startDownLatch.await();
         return listener;
     }
 
@@ -93,6 +95,7 @@ public class ClientSearcher {
 
 
         private Listener(int listenPort, CountDownLatch startDownLatch, CountDownLatch receiveDownLatch) {
+            super();
             this.listenPort = listenPort;
             this.startDownLatch = startDownLatch;
             this.receiveDownLatch = receiveDownLatch;
@@ -109,7 +112,11 @@ public class ClientSearcher {
                 //构建接收实体
                 while (!done) {
                     //接收
+                    if (ds.isClosed()) {
+                        continue;
+                    }
                     ds.receive(receivePack);
+
                     //打印接收到的信息 与发送者的信息
                     String ip = receivePack.getAddress().getHostAddress();
                     int port = receivePack.getPort();
@@ -117,7 +124,8 @@ public class ClientSearcher {
                     byte[] data = receivePack.getData();
                     boolean isValid = dataLen >= minLen &&
                             ByteUtils.startsWith(data, UDPConstants.HEADER);
-                    System.out.println("UDPSearcher receive form:" + ip + ":" + port + "\t dataValid:" + isValid);
+                    System.out.println("UDPSearcher receive form:"
+                            + ip + ":" + port + "\t dataValid:" + isValid);
 
                     if (!isValid) {
                         //无效继续
@@ -131,14 +139,18 @@ public class ClientSearcher {
                         System.out.println("UDPSearcher receive cmd:" + cmd + "\tserverPort:" + serverPort);
                         continue;
                     }
+
+
                     String sn = new String(buffer, minLen, dataLen - minLen);
                     ServerInfo info = new ServerInfo(sn, ip, serverPort);
                     serverInfoList.add(info);
+                    /**
+                     * 这里是不科学的不能获取到更多的服务器信息
+                     * 应该是再跑线程计时
+                     */
                     //成功接收到一份
                     receiveDownLatch.countDown();
                 }
-            } catch (SocketException e) {
-                e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
             } finally {

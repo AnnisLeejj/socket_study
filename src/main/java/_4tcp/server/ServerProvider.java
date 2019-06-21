@@ -48,7 +48,6 @@ public class ServerProvider {
         public void run() {
             System.out.println("UDPProvider Started.");
             try {
-                //监听20000端口
                 ds = new DatagramSocket(UDPConstants.PORT_SERVER);
                 //接收消息的Packet
                 DatagramPacket receivePack = new DatagramPacket(buffer, buffer.length);

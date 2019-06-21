@@ -15,17 +15,21 @@ public class ClientHandler {
     private final Socket socket;
     private final ClientReadHandler readHandler;
     private final ClientWriteHandler writeHandler;
-    private final CloseNotify closeNotify;
+    private final ClientHandlerCallback clientHandlerCallback;
+    private final String clientInfo;
 
-    public ClientHandler(@NotNull Socket socket, @NotNull CloseNotify closeNotify) throws IOException {
+    public ClientHandler(@NotNull Socket socket, @NotNull ClientHandlerCallback clientHandlerCallback) throws IOException {
         this.socket = socket;
         readHandler = new ClientReadHandler(socket.getInputStream());
         writeHandler = new ClientWriteHandler(socket.getOutputStream());
-        this.closeNotify = closeNotify;
-        System.out.println("新客户端连接:" + socket.getInetAddress() + ":" + socket.getPort());
-
+        this.clientHandlerCallback = clientHandlerCallback;
+        clientInfo = socket.getInetAddress() + ":" + socket.getPort();
+        System.out.println("新客户端连接:" + clientInfo);
     }
 
+    public String getClientInfo() {
+        return clientInfo;
+    }
 
     public void send(String message) {
         writeHandler.send(message);
@@ -49,8 +53,12 @@ public class ClientHandler {
 
     }
 
-    public interface CloseNotify {
+    public interface ClientHandlerCallback {
+        //自身关闭通知
         void onSelfClose(ClientHandler handler);
+
+        //收到信息时通知
+        void onNewMessageArrived(ClientHandler handler, String msg);
     }
 
     class ClientReadHandler extends Thread {
@@ -77,8 +85,8 @@ public class ClientHandler {
                         break;
                     }
                     //打印到屏幕,并回送数据长度
-                    System.out.println("接收到消息(" + socket.getInetAddress() + ":" + socket.getPort() + "):" + str);
-
+//                    System.out.println("接收到消息(" + socket.getInetAddress() + ":" + socket.getPort() + "):" + str);
+                    clientHandlerCallback.onNewMessageArrived(ClientHandler.this, str);
                 } while (!done);
             } catch (IOException e) {
                 if (!done) {
@@ -91,7 +99,6 @@ public class ClientHandler {
                 //连接关闭
                 CloseUtils.close(inputStream);
             }
-
         }
 
         void exit() {
@@ -111,7 +118,8 @@ public class ClientHandler {
         }
 
         void send(String message) {
-            executorService.execute(new WriteRunnable(message));
+            if (!executorService.isShutdown())
+                executorService.execute(new WriteRunnable(message));
         }
 
         void exit() {

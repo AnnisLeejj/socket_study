@@ -1,7 +1,6 @@
 package _4tcp.client;
 
 import _4tcp.bean.ServerInfo;
-import _4tcp.server.heandle.ClientHandler;
 import _4tcp.tools.CloseUtils;
 
 import java.io.*;
@@ -85,7 +84,7 @@ public class TCPClient {
                         break;
                     }
                     //打印到屏幕,并回送数据长度
-                    System.out.println("接收到消息(" + str);
+                    System.out.println("接收到 服务器消息:" + str);
 
                 } while (!done);
             } catch (IOException e) {
@@ -96,7 +95,6 @@ public class TCPClient {
                 //连接关闭
                 CloseUtils.close(inputStream);
             }
-
         }
 
         void exit() {

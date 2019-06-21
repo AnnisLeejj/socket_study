@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * 与客户端 TCP 通讯
  */
-public class TCPServer {
+public class TCPServer implements ClientHandler.ClientHandlerCallback {
     private final int port;
     private ClientListener mListener;
     private List<ClientHandler> clientHandlerList = new ArrayList<>();
@@ -48,6 +48,16 @@ public class TCPServer {
         });
     }
 
+    @Override
+    public void onSelfClose(ClientHandler handler) {
+        clientHandlerList.remove(handler);
+    }
+
+    @Override
+    public void onNewMessageArrived(ClientHandler handler, String msg) {
+
+    }
+
     private class ClientListener extends Thread {
         private ServerSocket server;
         private boolean done = false;
@@ -70,9 +80,7 @@ public class TCPServer {
                 }
                 try {
                     //客户端构建异步线程
-                    ClientHandler clientHandler = new ClientHandler(client, handler -> {
-                        clientHandlerList.remove(handler);
-                    });
+                    ClientHandler clientHandler = new ClientHandler(client, TCPServer.this);
                     //读取信息并打印
                     clientHandler.readToPrint();
                     clientHandlerList.add(clientHandler);
